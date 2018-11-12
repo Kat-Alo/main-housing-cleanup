@@ -5,7 +5,9 @@ import requests
 
 from time import sleep
 
-FINAL_CSV_FILENAME = 'data/processed/final-housing.csv'
+DATE = "11082018"
+
+FINAL_CSV_FILENAME = 'data/processed/clean-zips-housing-' + DATE + '.csv'
 
 VALID_ZIPCODES = [
 	"48215", "48224", "48223", "48207", "48221", "48234", "48216", "48201", "48228", "48235", "48217",

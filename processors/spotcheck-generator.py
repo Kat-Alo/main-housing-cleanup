@@ -6,7 +6,31 @@ import sys
 NUM_SPOTCHECK_DATA = 50
 
 
-def generate_sample_csv(filename):
+def main(data_filename, spotcheck_filename, sample_size):
+
+	sample_size = int(sample_size)
+
+	with open(data_filename, 'r') as fr:
+		headers = fr.readline()
+		rows = fr.readlines()
+
+	random.shuffle(rows)
+
+	with open(spotcheck_filename, 'w') as fw:
+		fw.write(headers)
+
+		counter = 1
+
+		for row in rows:
+			if counter <= sample_size:
+				fw.write(row)
+				counter += 1
+			else:
+				break
+
+
+
+def generate_sample_zip_csv(filename):
 
 	with open(filename, 'r') as fr:
 		headers = fr.readline()
@@ -42,4 +66,8 @@ def generate_sample_csv(filename):
 
 if __name__ == '__main__':
 
-	generate_sample_csv(sys.argv[1])
+	# generate_sample_csv(sys.argv[1])
+	main(sys.argv[1], sys.argv[2], sys.argv[3])
+
+
+

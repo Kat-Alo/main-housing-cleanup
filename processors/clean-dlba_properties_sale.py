@@ -1,21 +1,18 @@
 import csv
 import sys
 
-DATE = "11082018"
 
-NEW_CSV_HEADERS = ["ADDRESS", "TAX-AUCTION-STATUS", "AMOUNT-DUE"]
-OLD_CSV_HEADERS = ["address", "status", "due"]
-
-FINAL_CSV_FILENAME = 'data/processed/clean-tax-auction-' + DATE + '.csv'
+NEW_CSV_HEADERS = ["ADDRESS", "DLBA-SALE-PROGRAM"]
+OLD_CSV_HEADERS = ["Address", "Program"]
 
 
-def main(filename):
+def main(raw_filename, clean_filename):
 	#create a reader for the raw tax auction csv
-	with open(filename) as fr:
+	with open(raw_filename) as fr:
 		reader = csv.DictReader(fr)
 
 		#create a writer for the final tax auction csv
-		with open(FINAL_CSV_FILENAME, 'w') as fw:
+		with open(clean_filename, 'w') as fw:
 			writer = csv.writer(fw)
 
 			#Write the new headers into the new CSV
@@ -25,11 +22,11 @@ def main(filename):
 				new_row = []
 
 				for header in OLD_CSV_HEADERS:
-					new_row.append(row[header])
+					new_row.append(row[header].strip().lower())
 
 				writer.writerow(new_row)
 
 
 if __name__ == '__main__':
 
-	main(sys.argv[1])
+	main(sys.argv[1], sys.argv[2])

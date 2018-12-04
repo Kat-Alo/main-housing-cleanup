@@ -3,33 +3,49 @@ import sys
 import re
 import requests
 
-from time import sleep
-
-DATE = "11082018"
-
-FINAL_CSV_FILENAME = 'data/processed/clean-zips-housing-' + DATE + '.csv'
-
 VALID_ZIPCODES = [
 	"48215", "48224", "48223", "48207", "48221", "48234", "48216", "48201", "48228", "48235", "48217",
 	"48240", "48226", "48239", "48219", "48209", "48210", "48206", "48214", "48202", "48204", "48213",
 	"48238", "48203", "48211", "48208", "48212", "48236", "48225", "48205", "48227"]
 
-NEW_CSV_HEADERS = ["ADDRESS", "ZIP-CODE", "AUCTION-STATUS", "REGISTRATION", "FAILURE-COC", 
+NEW_CSV_HEADERS = ["ADDRESS", "ZIP-CODE", "RENTAL_REG_STATUS", "FAILURE-COC", 
 	"NUMBER-BLIGHT-TICKETS" , "OUTSTANDING-FINE", "LATITUDE", "LONGITUDE", "ZIP-MODIFIED", "CLEAN-ZIP-CODE"]
 
-OLD_CSV_HEADERS = ["address", "zip code", "auction status", "registration", "failure to get coc", 
+OLD_CSV_HEADERS = ["address", "zip code", "registration", "failure to get coc", 
 	"number of blight tickets", "outstanding fine"]
 
 GOOGLE_MAPS_API_URL = 'https://maps.googleapis.com/maps/api/geocode/json'
 
 
-def main(filename):
+def get_zip(address):
+	#'Okay, Google. What is the zip code for this address?'
+	params = {
+		'address' :  (address + " Detroit, MI"),
+		'key' : GOOGLE_MAPS_API_KEY
+	}
+
+	req = requests.get(GOOGLE_MAPS_API_URL, params=params)
+	res = req.json()
+
+	#assumes first result is best result
+	result = res['results'][0]
+
+	address_components = result["address_components"]
+
+	for component in address_components:
+		if component['types'] and 'postal_code' in component.get('types'):
+			new_zip = component["short_name"]
+			break
+
+	return new_zip
+
+def main(raw_filename, clean_filename):
 	#create a reader for the raw housing csv
-	with open(filename) as fr:
+	with open(raw_filename) as fr:
 		reader = csv.DictReader(fr)
 
 		#create a writer for the final housing csv
-		with open(FINAL_CSV_FILENAME, 'w') as fw:
+		with open(clean_filename, 'w') as fw:
 			writer = csv.writer(fw)
 
 			#Write the new headers into the new CSV
@@ -47,7 +63,7 @@ def main(filename):
 
 				#iterate over all the old headers with data we need and write that data into the row
 				for header in OLD_CSV_HEADERS:
-					new_row.append(row[header])
+					new_row.append(row[header].strip().lower())
 
 				#pull latitude from "location" value
 				location = row["location"]
@@ -65,24 +81,7 @@ def main(filename):
 					#indicate that the zip code was modified
 					new_row.append("true")
 
-					#'Okay, Google. What is the zip code for this address?'
-					params = {
-						'address' :  (row['address'] + " Detroit, MI"),
-						'key' : GOOGLE_MAPS_API_KEY
-					}
-
-					req = requests.get(GOOGLE_MAPS_API_URL, params=params)
-					res = req.json()
-
-					#assumes first result is best result
-					result = res['results'][0]
-
-					address_components = result["address_components"]
-
-					for component in address_components:
-						if component['types'] and 'postal_code' in component.get('types'):
-							new_zip = component["short_name"]
-							break
+					new_zip = get_zip(row['address'])
 
 					new_row.append(new_zip)
 
@@ -99,7 +98,7 @@ def main(filename):
 
 if __name__ == '__main__':
 
-	main(sys.argv[1])
+	main(sys.argv[1], sys.argv[2])
 
 
 

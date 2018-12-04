@@ -1,14 +1,20 @@
-DATE = 11082018
-TABLES = main_housing tax_auction tax_payer
-#demolition
+DATE = 11292018
+DIRECTORIES = raw processed
+DOWNLOADS = parcel_points_ownership blight_violations rental_registrations upcoming_demolitions demolition_pipeline vacant_certifications vacant_registrations dlba_inventory dlba_properties_sale
+TABLES = parcel_points_ownership blight_violations rental_registrations tax_auction upcoming_demolitions demolition_pipeline vacant_certifications vacant_registrations dlba_inventory dlba_properties_sale
+VIEWS = blight_count data_overview
 
-.PHONY: all db create_db schema create_tables load_data clean drop_db
+.PHONY: all create_directories download db create_db schema create_tables load_data create_views clean drop_db
 
-all: db create_tables load_data
+all: db create_tables load_data create_views data/processed/$(DATE)/groundsource_webhook.csv
 
+create_directories: $(patsubst %, directory_%, $(DIRECTORIES))
+download: $(patsubst %, data/raw/$(DATE)/raw-%.csv, $(DOWNLOADS))
+process_data: $(patsubst %, data/processed/$(DATE)/clean-%.csv, $(TABLES))
 db: create_db schema
 create_tables: $(patsubst %, table_%, $(TABLES))
-load_data: $(patsubst %, load_clean_zips_%, $(DATE)) $(patsubst %, load_tax_auction_%, $(DATE)) $(patsubst %, load_tax_payer_%, $(DATE))
+load_data: $(patsubst %, load_%, $(TABLES))
+create_views: $(patsubst %, view_%, $(VIEWS))
 clean: drop_db
 
 
@@ -26,18 +32,6 @@ endef
 
 define check_public_relation_%
  $(psql) -c "\d public.%" > /dev/null 2>&1
-endef
-
-define check_main_housing_relation
- $(psql) -c "\d public.main_housing" > /dev/null 2>&1
-endef
-
-define check_tax_auction_relation
- $(psql) -c "\d public.tax_auction" > /dev/null 2>&1
-endef
-
-define check_tax_payer_relation
- $(psql) -c "\d public.tax_payer" > /dev/null 2>&1
 endef
 
 ########################################################################
@@ -58,56 +52,73 @@ drop_db :
 	psql $(DETROIT_PROPERTIES_ROOT_URL) -c "drop database $(DETROIT_PROPERITES_DB_NAME);"
 
 ########################################################################
+#Create new directories for today's data download
+########################################################################
+
+directory_%:
+	mkdir data/$*/$(DATE)
+
+########################################################################
+#Download data
+########################################################################
+
+data/raw/$(DATE)/raw-parcel_points_ownership.csv:
+	curl "https://data.detroitmi.gov/api/views/dxgi-9s8s/rows.csv?accessType=DOWNLOAD" > $@
+
+data/raw/$(DATE)/raw-rental_registrations.csv:
+	curl "https://data.detroitmi.gov/api/views/64cb-n6dd/rows.csv?accessType=DOWNLOAD" > $@
+
+data/raw/$(DATE)/raw-blight_violations.csv:
+	curl "https://data.detroitmi.gov/api/views/ti6p-wcg4/rows.csv?accessType=DOWNLOAD" > $@
+
+data/raw/$(DATE)/raw-upcoming_demolitions.csv:
+	curl "https://data.detroitmi.gov/api/views/tsqq-qtet/rows.csv?accessType=DOWNLOAD" > $@
+
+data/raw/$(DATE)/raw-demolition_pipeline.csv:
+	curl "https://data.detroitmi.gov/api/views/urqn-dpd3/rows.csv?accessType=DOWNLOAD&bom=true&query=select+*" > $@
+
+data/raw/$(DATE)/raw-vacant_certifications.csv:
+	curl "https://data.detroitmi.gov/api/views/8vfc-77i7/rows.csv?accessType=DOWNLOAD" > $@
+
+data/raw/$(DATE)/raw-vacant_registrations.csv:
+	curl "https://data.detroitmi.gov/api/views/futm-xtvg/rows.csv?accessType=DOWNLOAD" > $@
+
+data/raw/$(DATE)/raw-dlba_inventory.csv:
+	curl "https://data.detroitmi.gov/api/views/vsin-ur7i/rows.csv?accessType=DOWNLOAD" > $@
+
+data/raw/$(DATE)/raw-dlba_properties_sale.csv:
+	curl "https://data.detroitmi.gov/api/views/gfhb-f4i5/rows.csv?accessType=DOWNLOAD" > $@
+
+########################################################################
 #Clean data
 ########################################################################
 
-.PRECIOUS: data/processed/clean-zips-housing-%.csv
-data/processed/clean-zips-housing-%.csv: data/raw-housing-%.csv
-	python processors/check-zipcodes.py $< > data/processed/clean-zips-housing-$*.csv 2> data/processed/clean-zips-housing-$*_err.txt
-
-.PRECIOUS: data/proccessed/clean-tax-auction-%.csv
-data/processed/clean-tax-auction-%.csv: data/raw-tax-auction-%.csv
-	python processors/clean-tax-auction.py $< > data/processed/clean-tax-auction-$*.csv 2> data/processed/clean-tax-auction-$*_err.txt
-
-.PRECIOUS: data/processed/clean-tax-payer-%.csv
-data/processed/clean-tax-payer-%.csv: data/raw-tax-payer-%.csv
-	python processors/clean-tax-payer.py $< > data/processed/clean-tax-payer-$*.csv 2> data/processed/clean-tax-payer-$*_err.txt
+.PRECIOUS: data/processed/$(DATE)/clean-%.csv
+data/processed/$(DATE)/clean-%.csv: data/raw/$(DATE)/raw-%.csv
+	python processors/clean-$*.py $< $@ > data/processed/$(DATE)/clean-$*.csv 2> data/processed/$(DATE)/clean-$*_err.txt
 
 ########################################################################
 #Load data into PostgreSQL
 ########################################################################
 
-load_clean_zips_%: data/processed/clean-zips-housing-%.csv
-	$(check_main_housing_relation) && $(psql) -c "\copy public.main_housing from '$(CURDIR)/$<' with (delimiter ',', format csv, header);"
-
-load_tax_auction_%: data/processed/clean-tax-auction-%.csv
-	$(check_tax_auction_relation) && $(psql) -c "\copy public.tax_auction from '$(CURDIR)/$<' with (delimiter ',', format csv, header);"
-
-load_tax_payer_%: data/processed/clean-tax-payer-%.csv
-	$(check_tax_payer_relation) && $(psql) -c "\copy public.tax_payer from '$(CURDIR)/$<' with (delimiter ',', format csv, header);"
-
-
+load_%: data/processed/$(DATE)/clean-%.csv
+	$(psql) -c "\copy public.$* from '$(CURDIR)/$<' with (delimiter ',', format csv, header);"
 
 ########################################################################
-#Join and export data as CSV for publication
+#Join and export data as CSV for internal use
 ########################################################################
 
+view_%: data/sql/views/%.sql
+	$(psql) -f $<
 
+data/processed/$(DATE)/data_overview.csv:
+	$(psql) -c "\copy (SELECT * FROM data_overview) TO '$(CURDIR)/$@' with (delimiter ',', format csv, header);"
 
+########################################################################
+#Process overview CSV with text for GroundSource
+########################################################################
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+data/processed/$(DATE)/groundsource_webhook.csv: data/processed/$(DATE)/data_overview.csv
+	python processors/groundsource_webhook.py $< $@ > data/processed/$(DATE)/groundsource_webhook.csv 2> data/processed/$(DATE)/groundsource_webhook_err.txt
 
 

@@ -4,6 +4,17 @@ This is the home of Outlier Media data cleaning processes. Most of our data will
 
 As with any data journalism project, we must account for entry errors and check the integrity of both our processed data and the data originally provided to us.
 
+## Requirements
+
+GNU Make
+Python 3
+PostgreSQL
+Google Geocoder API Key
+
+## Configuration
+
+
+
 ## A note about our style conventions
 
 Original and processed data will look similar (although the files _should_ be properly named). To avoid confusion, the headers for original or intermediate data will be all lower case (including acronyms and proper nouns), and final processed data headers WILL-BE-ALL-UPPERCASE-WITH-HYPHENS-INSTEAD-OF-SPACES.

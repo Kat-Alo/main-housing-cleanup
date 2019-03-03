@@ -2,6 +2,7 @@ import csv
 import sys
 import re
 import requests
+import os
 
 
 VALID_ZIPCODES = [
@@ -20,7 +21,7 @@ def get_zip(address):
 	#'Okay, Google. What is the zip code for this address?'
 	params = {
 		'address' :  (address + " Detroit, MI"),
-		'key' : GOOGLE_MAPS_API_KEY
+		'key' : os.getenv("GOOGLE_MAPS_API_KEY")
 	}
 
 	req = requests.get(GOOGLE_MAPS_API_URL, params=params)
@@ -54,8 +55,12 @@ def main(raw_filename, clean_filename):
 			#Write the new headers into the new CSV
 			writer.writerow(NEW_CSV_HEADERS)
 
+			counter = 0
+
 			#go through and check each row
 			for row in reader:
+
+				# print("Processing row number %s" % str(counter))
 
 				row_empty = True
 
@@ -80,6 +85,8 @@ def main(raw_filename, clean_filename):
 					#indicate that the zip code was modified
 					new_row.append("true")
 
+					# print("Zip code %s not valid" % row["Zip Code"])
+
 					new_zip = get_zip(row['Address'])
 
 					new_row.append(new_zip)
@@ -92,6 +99,9 @@ def main(raw_filename, clean_filename):
 					new_row.append(row["Zip Code"])
 
 				writer.writerow(new_row)
+				# print("Row written for address: %s" % new_row[0])
+
+				counter += 1
 
 if __name__ == '__main__':
 

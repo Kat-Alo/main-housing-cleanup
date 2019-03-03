@@ -2,8 +2,10 @@ import csv
 import sys
 import datetime
 
-NEW_CSV_HEADERS = ["address", "rental_reg_status", "number_blight_tickets", "coc_date", "tax_auction_status",
-	"amount_due", "taxpayer", "owner", "demolition_status", "vacant_status", "dlba_inventory_status"]
+# NEW_CSV_HEADERS = ["address", "rental_reg_status", "number_blight_tickets", "coc_date", "tax_auction_status",
+# 	"amount_due", "taxpayer", "owner", "demolition_status", "vacant_status", "dlba_inventory_status"]
+
+NEW_CSV_HEADERS = ["address", "Q1_tax_status", "Q2_rental_reg_status", "Q3_vacant_concern", "Q4_vacant_purchase"]
 
 STREET_ABBREVIATIONS = ["st", "blvd", "ct", "dr", "ave", "ctr", "cir", "hwy", "jct", "ln", "pkwy", "rd"]
 
@@ -16,15 +18,6 @@ COC_DATES_BY_ZIP = {"48215": "now", "48224": "now", "48223": "now", "48207": "by
 	"48211": "by Jun 1, 2019", "48208": "by July 1, 2019", "48212": "by July 1, 2019", "48236": "by Aug 1, 2019",
 	"48225": "by Aug 1, 2019", "48205": "by Aug 1, 2019", "48227": "by Aug 1, 2019"}
 
-def process_address(address):
-	split_address = address.split(" ")
-
-	if split_address[-1] in STREET_ABBREVIATIONS:
-		split_address.pop()
-
-	new_address = " ".join(split_address)
-
-	return new_address.upper().strip()
 
 def process_rental_reg_status(rental_reg_status):
 
@@ -64,22 +57,6 @@ def process_coc_date(zip_code):
 		return "All rentals in that zip code need to be registered and inspected with the city by %s" % COC_DATES_BY_ZIP[zip_code]		 
 	else:
 		return "This zip code does not have a rental compliance date"
-
-def process_tax_auction_status(tax_auction_status):
-
-	if tax_auction_status.strip() == "":
-		new_status = "ok"
-	else:
-		new_status = tax_auction_status
-
-	return new_status
-
-def process_amount_due(amount_due):
-
-	if amount_due.strip() == "":
-		return "0"
-	else:
-		return amount_due
 
 def process_taxpayer(taxpayer):
 
@@ -128,6 +105,70 @@ def process_dlba_inventory_status(inventory_status):
 
 	return new_inventory_status
 
+def process_vacant_concern_message(row):
+
+	taxpayer = process_taxpayer(row['taxpayer'])
+	address = process_address(row['address'])
+	demolition_status = process_demolition_status(row['projected_demolish_by_date'], row['demolition_pipeline'])
+	number_blight_tickets = process_number_blight_tickets(row['number_blight_tickets'])
+
+	if number_blight_tickets.isdigit() and int(number_blight_tickets) == 1:
+		return "The city has {taxpayer} listed as the taxpayer for {address}. {demolition_status}. There is {number_blight_tickets} open blight ticket for that address.".format(taxpayer=taxpayer,
+			address=address, demolition_status=demolition_status, number_blight_tickets=number_blight_tickets)
+
+	return "The city has {taxpayer} listed as the taxpayer for {address}. {demolition_status}. There are {number_blight_tickets} open blight tickets for that address.".format(taxpayer=taxpayer,
+		address=address, demolition_status=demolition_status, number_blight_tickets=number_blight_tickets)
+
+def process_rental_message(row):
+
+	taxpayer = process_taxpayer(row['taxpayer'])
+	address = process_address(row['address'])
+	rental_reg_status = process_rental_reg_status(row['rental_reg_status'])
+	coc_date = process_coc_date(row['zip_code'])
+
+	return "{taxpayer} is listed as the taxpayer for {address}. {rental_reg_status}. {coc_date}.".format(taxpayer=taxpayer, address=address, rental_reg_status=rental_reg_status,
+		coc_date=coc_date)
+
+def process_tax_message(row):
+
+	taxpayer = process_taxpayer(row['taxpayer'])
+	address = process_address(row['address'])
+	tax_auction_status = row['tax_auction_status'].strip()
+	amount_due = row['amount_due'].strip()
+
+	if tax_auction_status == "":
+		return "The Treasurer has {taxpayer} listed as the taxpayer for {address}. There is no overdue tax debt listed for this property".format(taxpayer=taxpayer, address=address)
+
+	elif amount_due.strip() == "":
+		return "The Treasurer has {taxpayer} listed as the taxpayer for {address}. This property has been foreclosed".format(taxpayer=taxpayer, address=address)
+
+	return "The Treasurer has {taxpayer} listed as the taxpayer for {address}. The tax status is {tax_auction_status} and the tax due is ${amount_due}".format(taxpayer=taxpayer,
+		address=address, tax_auction_status=tax_auction_status, amount_due=amount_due)
+
+
+def process_address(address):
+	split_address = address.split(" ")
+
+	if split_address[-1] in STREET_ABBREVIATIONS:
+		split_address.pop()
+
+	new_address = " ".join(split_address)
+
+	return new_address.upper().strip()
+
+def row_is_complete(row):
+
+	count_values = 0
+
+	for header in row.keys():
+		if row[header].strip() != "":
+			count_values += 1
+
+	if count_values > 2:
+		return True
+
+	return False
+
 def main(overview_filename, groundsource_filename):
 
 	#create a reader for the raw overview file
@@ -144,19 +185,15 @@ def main(overview_filename, groundsource_filename):
 			for row in reader:
 				new_row = []
 
-				new_row.append(process_address(row['address']))
-				new_row.append(process_rental_reg_status(row['rental_reg_status']))
-				new_row.append(process_number_blight_tickets(row['number_blight_tickets']))
-				new_row.append(process_coc_date(row['zip_code']))
-				new_row.append(process_tax_auction_status(row['tax_auction_status']))
-				new_row.append(process_amount_due(row['amount_due']))
-				new_row.append(process_taxpayer(row['taxpayer']))
-				new_row.append(process_owner(row['owner']))
-				new_row.append(process_demolition_status(row['projected_demolish_by_date'], row['demolition_pipeline']))
-				new_row.append(process_vacant_status(row['vacant_certified_last_name'], row['vacant_registered_last_name']))
-				new_row.append(process_dlba_inventory_status(row['inventory_status']))
+				if row_is_complete(row):
 
-				writer.writerow(new_row)
+					new_row.append(process_address(row['address']))
+					new_row.append(process_tax_message(row))
+					new_row.append(process_rental_message(row))
+					new_row.append(process_vacant_concern_message(row))
+					new_row.append(process_dlba_inventory_status(row['inventory_status']))
+
+					writer.writerow(new_row)
 
 
 

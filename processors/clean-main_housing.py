@@ -51,8 +51,12 @@ def main(raw_filename, clean_filename):
 			#Write the new headers into the new CSV
 			writer.writerow(NEW_CSV_HEADERS)
 
+			counter = 0
+
 			#go through and check each row
 			for row in reader:
+
+				print("Processing row number %s" % counter)
 
 				#if the row has nothing, we are done. Please walk, don't run, to the exit.
 				if row['address'].strip() == "":
@@ -63,6 +67,7 @@ def main(raw_filename, clean_filename):
 
 				#iterate over all the old headers with data we need and write that data into the row
 				for header in OLD_CSV_HEADERS:
+					print("Adding item: %s" % row[header])
 					new_row.append(row[header].strip().lower())
 
 				#pull latitude from "location" value
@@ -70,16 +75,19 @@ def main(raw_filename, clean_filename):
 				lat_search = re.search('(?<=\()(.*?)(?=,)', location)
 				lat = lat_search.group(0)
 				new_row.append(lat)
+				print("Adding latitude: %s" % lat)
 
 				#pull longitude from "location" value
 				lon_search = re.search('(?<=, )(.*?)(?=\))', location)
 				lon = lon_search.group(0).strip()
 				new_row.append(lon)
+				print("Adding longitude: %s" % lon)
 
 				#if the zip code is not one of the valid zip codes listed, we need to modify it and flag it as modified
 				if row["zip code"] not in VALID_ZIPCODES:
 					#indicate that the zip code was modified
 					new_row.append("true")
+					print("Need to correct zip: %s" % row["zip code"])
 
 					new_zip = get_zip(row['address'])
 
@@ -93,7 +101,7 @@ def main(raw_filename, clean_filename):
 					new_row.append(row["zip code"])
 
 				writer.writerow(new_row)
-				print("NEW ROW HAS BEEN WRITTEN")
+				print("ROW HAS BEEN WRITTEN FOR ADDRESS: %s" % new_row["ADDRESS"])
 				print(new_row)
 
 if __name__ == '__main__':

@@ -1,4 +1,5 @@
-DATE = 11292018
+DATE = 02222019
+TAX_DATE = 02112019
 DIRECTORIES = raw processed
 DOWNLOADS = parcel_points_ownership blight_violations rental_registrations upcoming_demolitions demolition_pipeline vacant_certifications vacant_registrations dlba_inventory dlba_properties_sale
 TABLES = parcel_points_ownership blight_violations rental_registrations tax_auction upcoming_demolitions demolition_pipeline vacant_certifications vacant_registrations dlba_inventory dlba_properties_sale
@@ -6,7 +7,7 @@ VIEWS = blight_count data_overview
 
 .PHONY: all create_directories download db create_db schema create_tables load_data create_views clean drop_db
 
-all: db create_tables load_data create_views data/processed/$(DATE)/groundsource_webhook.csv
+all: db create_tables load_data create_views data/processed/$(DATE)/reach_webhook.csv
 
 create_directories: $(patsubst %, directory_%, $(DIRECTORIES))
 download: $(patsubst %, data/raw/$(DATE)/raw-%.csv, $(DOWNLOADS))
@@ -35,12 +36,11 @@ define check_public_relation_%
 endef
 
 ########################################################################
-#PSQL database administration 
+#PSQL database administration $(psql) && \ -c "CREATE EXTENSION IF NOT EXISTS postgis;"
 ########################################################################
 
 create_db :
-	$(check_database) || psql $(DETROIT_PROPERTIES_DB_ROOT_URL) -c "create database $(DETROIT_PROPERITES_DB_NAME) lc_collate \"C\" lc_ctype \"C\" template template0;" && \
-	$(psql) -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+	$(check_database) || psql $(DETROIT_PROPERTIES_DB_ROOT_URL) -c "create database $(DETROIT_PROPERITES_DB_NAME) lc_collate \"C\" lc_ctype \"C\" template template0;"
 
 schema :
 	$(psql) -c "CREATE SCHEMA IF NOT EXISTS tmp;"
@@ -89,6 +89,9 @@ data/raw/$(DATE)/raw-dlba_inventory.csv:
 data/raw/$(DATE)/raw-dlba_properties_sale.csv:
 	curl "https://data.detroitmi.gov/api/views/gfhb-f4i5/rows.csv?accessType=DOWNLOAD" > $@
 
+data/raw/$(DATE)/raw-tax_auction.csv:
+	python processors/get-raw-tax-data.py data/raw/$(DATE)/raw-tax_auction.csv > data/raw/$(DATE)/raw-tax_auction.csv
+
 ########################################################################
 #Clean data
 ########################################################################
@@ -120,5 +123,12 @@ data/processed/$(DATE)/data_overview.csv:
 
 data/processed/$(DATE)/groundsource_webhook.csv: data/processed/$(DATE)/data_overview.csv
 	python processors/groundsource_webhook.py $< $@ > data/processed/$(DATE)/groundsource_webhook.csv 2> data/processed/$(DATE)/groundsource_webhook_err.txt
+
+########################################################################
+#Process overview CSV with text for Reach
+########################################################################
+
+data/processed/$(DATE)/reach_webhook.csv: data/processed/$(DATE)/data_overview.csv
+	python processors/reach_webhook.py $< $@ > data/processed/$(DATE)/reach_webhook.csv 2> data/processed/$(DATE)/reach_webhook_err.txt
 
 

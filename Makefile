@@ -1,5 +1,5 @@
-DATE = 02222019
-TAX_DATE = 02112019
+DATE = 03032019
+TAX_DATE = 03032019
 DIRECTORIES = raw processed
 DOWNLOADS = parcel_points_ownership blight_violations rental_registrations upcoming_demolitions demolition_pipeline vacant_certifications vacant_registrations dlba_inventory dlba_properties_sale
 TABLES = parcel_points_ownership blight_violations rental_registrations tax_auction upcoming_demolitions demolition_pipeline vacant_certifications vacant_registrations dlba_inventory dlba_properties_sale

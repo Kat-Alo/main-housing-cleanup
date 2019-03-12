@@ -2,4 +2,6 @@
 env.sh
 venv/
 logfile
-data/*
+data/processed/*
+data/raw/*
+

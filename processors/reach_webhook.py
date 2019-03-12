@@ -137,12 +137,12 @@ def process_tax_message(row):
 	amount_due = row['amount_due'].strip()
 
 	if tax_auction_status == "":
-		return "The Treasurer has {taxpayer} listed as the taxpayer for {address}. There is no overdue tax debt listed for this property".format(taxpayer=taxpayer, address=address)
+		return "{taxpayer} is listed as the taxpayer for {address}. There is no overdue tax debt listed for this property".format(taxpayer=taxpayer, address=address)
 
 	elif amount_due.strip() == "":
-		return "The Treasurer has {taxpayer} listed as the taxpayer for {address}. This property has been foreclosed".format(taxpayer=taxpayer, address=address)
+		return "{taxpayer} is listed as the taxpayer for {address}. This property has been foreclosed".format(taxpayer=taxpayer, address=address)
 
-	return "The Treasurer has {taxpayer} listed as the taxpayer for {address}. The tax status is {tax_auction_status} and the tax due is ${amount_due}".format(taxpayer=taxpayer,
+	return "{taxpayer} is listed as the taxpayer for {address}. The tax status is {tax_auction_status} and the tax due is ${amount_due}".format(taxpayer=taxpayer,
 		address=address, tax_auction_status=tax_auction_status, amount_due=amount_due)
 
 

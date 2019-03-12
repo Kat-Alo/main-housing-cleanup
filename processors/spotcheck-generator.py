@@ -2,10 +2,6 @@ import csv
 import random
 import sys
 
-
-NUM_SPOTCHECK_DATA = 50
-
-
 def main(data_filename, spotcheck_filename, sample_size):
 
 	sample_size = int(sample_size)
@@ -29,8 +25,8 @@ def main(data_filename, spotcheck_filename, sample_size):
 				break
 
 
-
-def generate_sample_zip_csv(filename):
+#Written for special spotcheck where equal random sample was needed from two sources
+def generate_sample_zip_csv(filename, sample_size):
 
 	with open(filename, 'r') as fr:
 		headers = fr.readline()
@@ -48,15 +44,15 @@ def generate_sample_zip_csv(filename):
 			processed_counter = 0
 			for row in rows:
 				print(row)
-				if original_counter == NUM_SPOTCHECK_DATA and processed_counter == NUM_SPOTCHECK_DATA:
+				if original_counter == sample_size and processed_counter == sample_size:
 					print("REACHED SAMPLE LIMIT FOR BOTH SEARCHES")
 					break
-				elif "false" in row and original_counter < NUM_SPOTCHECK_DATA:
+				elif "false" in row and original_counter < sample_size:
 					print("ADDING ROW FOR ORIGINAL DATA CHECK")
 					print(row)
 					original_f.write(row)
 					original_counter += 1
-				elif "true" in row and processed_counter < NUM_SPOTCHECK_DATA:
+				elif "true" in row and processed_counter < sample_size:
 					print("ADDING ROW FOR PROCESSED DATA CHECK")
 					print(row)
 					processed_f.write(row)
@@ -66,7 +62,7 @@ def generate_sample_zip_csv(filename):
 
 if __name__ == '__main__':
 
-	# generate_sample_csv(sys.argv[1])
+	# generate_sample_csv(sys.argv[1], sys.argv[2])
 	main(sys.argv[1], sys.argv[2], sys.argv[3])
 
 

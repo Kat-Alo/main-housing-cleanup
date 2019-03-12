@@ -1,20 +1,31 @@
-DATE = 03032019
-TAX_DATE = 03032019
-DIRECTORIES = raw processed
+DATE = 03122019
+SPOTCHECK_SAMPLE_SIZE = 20
+
+#searches for the most recent Loveland scrape of the Treasurer's data, returns date of scrape
+tax_status_date = $(shell python processors/get-raw-tax-data.py data/raw/$(DATE))
+
+#helpful to test
+echo:
+	echo $(tax_status_date)
+
+DIRECTORIES = processed
 DOWNLOADS = parcel_points_ownership blight_violations rental_registrations upcoming_demolitions demolition_pipeline vacant_certifications vacant_registrations dlba_inventory dlba_properties_sale
-TABLES = parcel_points_ownership blight_violations rental_registrations tax_auction upcoming_demolitions demolition_pipeline vacant_certifications vacant_registrations dlba_inventory dlba_properties_sale
+TABLES = parcel_points_ownership blight_violations rental_registrations tax_status upcoming_demolitions demolition_pipeline vacant_certifications vacant_registrations dlba_inventory dlba_properties_sale
+LOAD = parcel_points_ownership blight_violations rental_registrations upcoming_demolitions demolition_pipeline vacant_certifications vacant_registrations dlba_inventory dlba_properties_sale
 VIEWS = blight_count data_overview
 
-.PHONY: all create_directories download db create_db schema create_tables load_data create_views clean drop_db
+.PHONY: all create_directories tax_status_date download db create_db schema create_tables clean_tax_data load_tax_data load_data create_views clean drop_db
 
-all: db create_tables load_data create_views data/processed/$(DATE)/reach_webhook.csv
+all: create_directories db create_tables clean_tax_data load_data create_views data/processed/$(DATE)/reach_spotcheck.csv
 
 create_directories: $(patsubst %, directory_%, $(DIRECTORIES))
 download: $(patsubst %, data/raw/$(DATE)/raw-%.csv, $(DOWNLOADS))
 process_data: $(patsubst %, data/processed/$(DATE)/clean-%.csv, $(TABLES))
 db: create_db schema
 create_tables: $(patsubst %, table_%, $(TABLES))
-load_data: $(patsubst %, load_%, $(TABLES))
+load_data: load_tax_data load_portal_data
+load_portal_data: $(patsubst %, data_portal_load_%, $(LOAD)) 
+load_tax_data: tax_load_$(tax_status_date)
 create_views: $(patsubst %, view_%, $(VIEWS))
 clean: drop_db
 
@@ -36,7 +47,7 @@ define check_public_relation_%
 endef
 
 ########################################################################
-#PSQL database administration $(psql) && \ -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+#PSQL database administration
 ########################################################################
 
 create_db :
@@ -61,7 +72,6 @@ directory_%:
 ########################################################################
 #Download data
 ########################################################################
-
 data/raw/$(DATE)/raw-parcel_points_ownership.csv:
 	curl "https://data.detroitmi.gov/api/views/dxgi-9s8s/rows.csv?accessType=DOWNLOAD" > $@
 
@@ -89,9 +99,6 @@ data/raw/$(DATE)/raw-dlba_inventory.csv:
 data/raw/$(DATE)/raw-dlba_properties_sale.csv:
 	curl "https://data.detroitmi.gov/api/views/gfhb-f4i5/rows.csv?accessType=DOWNLOAD" > $@
 
-data/raw/$(DATE)/raw-tax_auction.csv:
-	python processors/get-raw-tax-data.py data/raw/$(DATE)/raw-tax_auction.csv > data/raw/$(DATE)/raw-tax_auction.csv
-
 ########################################################################
 #Clean data
 ########################################################################
@@ -100,12 +107,22 @@ data/raw/$(DATE)/raw-tax_auction.csv:
 data/processed/$(DATE)/clean-%.csv: data/raw/$(DATE)/raw-%.csv
 	python processors/clean-$*.py $< $@ > data/processed/$(DATE)/clean-$*.csv 2> data/processed/$(DATE)/clean-$*_err.txt
 
+# .PRECIOUS: data/processed/$(DATE)/clean-%_tax_status.csv
+# data/processed/$(DATE)/clean-%_tax_status.csv: data/raw/$(DATE)/$(tax_status_date).csv
+# 	python processors/clean-tax_status.py $< $@ > data/processed/$(DATE)/clean-$(tax_status_date)_tax_status.csv 2> data/processed/$(DATE)/clean-$(tax_status_date)_tax_status_err.txt
+# > data/processed/$(DATE)/clean-$(tax_status_date)_tax_status.csv 2> data/processed/$(DATE)/clean-$(tax_status_date)_tax_status_err.txt
+clean_tax_data:
+	python processors/clean-tax_status.py "data/raw/$(DATE)/$(tax_status_date).csv" "data/processed/$(DATE)/clean-$(tax_status_date)_tax_status.csv"
+
 ########################################################################
 #Load data into PostgreSQL
 ########################################################################
 
-load_%: data/processed/$(DATE)/clean-%.csv
+data_portal_load_%: data/processed/$(DATE)/clean-%.csv
 	$(psql) -c "\copy public.$* from '$(CURDIR)/$<' with (delimiter ',', format csv, header);"
+
+tax_load_%:
+	$(psql) -c "\copy public.tax_status from '$(CURDIR)/data/processed/$(DATE)/clean-$*_tax_status.csv' with (delimiter ',', format csv, header);"
 
 ########################################################################
 #Join and export data as CSV for internal use
@@ -130,5 +147,20 @@ data/processed/$(DATE)/groundsource_webhook.csv: data/processed/$(DATE)/data_ove
 
 data/processed/$(DATE)/reach_webhook.csv: data/processed/$(DATE)/data_overview.csv
 	python processors/reach_webhook.py $< $@ > data/processed/$(DATE)/reach_webhook.csv 2> data/processed/$(DATE)/reach_webhook_err.txt
+
+########################################################################
+#Generate spotcheck file from reach_webhook
+########################################################################
+
+data/processed/$(DATE)/reach_spotcheck.csv: data/processed/$(DATE)/reach_webhook.csv
+	python processors/spotcheck-generator.py $< $@ $(SPOTCHECK_SAMPLE_SIZE) > data/processed/$(DATE)/reach_spotcheck.csv 2> data/processed/$(DATE)/reach_spotcheck_err.txt
+
+
+
+
+
+
+
+
 
 

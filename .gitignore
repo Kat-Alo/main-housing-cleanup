@@ -2,4 +2,4 @@
 env.sh
 venv/
 logfile
-data/
+data/*

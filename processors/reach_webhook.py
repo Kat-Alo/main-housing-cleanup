@@ -9,14 +9,14 @@ NEW_CSV_HEADERS = ["address", "Q1_tax_status", "Q2_rental_reg_status", "Q3_vacan
 
 STREET_ABBREVIATIONS = ["st", "blvd", "ct", "dr", "ave", "ctr", "cir", "hwy", "jct", "ln", "pkwy", "rd"]
 
-COC_DATES_BY_ZIP = {"48215": "now", "48224": "now", "48223": "now", "48207": "by Sept 1, 2019", 
-	"48221": "by Sept 1, 2019", "48234": "by Oct 1, 2019", "48216": "by Oct 1, 2019", "48201": "by Nov 1, 2019",
-	"48228": "by Nov 1, 2019", "48235": "by Dec 1, 2019", "48217": "by Dec 1, 2019", "48240": "by Jan 1, 2020",
-	"48226": "by Jan 1, 2020", "48239": "by Jan 1, 2020", "48219": "by Dec 1, 2018", "48209": "by Jan 1, 2019",
-	"48210": "by Feb 1, 2019", "48206": "by Mar 1, 2019", "48214": "by Mar 1, 2019", "48202": "by Apr 1, 2019",
-	"48204": "by Apr 1, 2019", "48213": "by May 1, 2019", "48238": "by May 1, 2019", "48203": "by Jun 1, 2019",
-	"48211": "by Jun 1, 2019", "48208": "by July 1, 2019", "48212": "by July 1, 2019", "48236": "by Aug 1, 2019",
-	"48225": "by Aug 1, 2019", "48205": "by Aug 1, 2019", "48227": "by Aug 1, 2019"}
+COC_DATES_BY_ZIP = {"48215": datetime.datetime(2018, 8, 1), "48224": datetime.datetime(2018, 9, 1), "48223": datetime.datetime(2018, 11, 1), "48207": datetime.datetime(2019, 9, 1), 
+	"48221": datetime.datetime(2019, 9, 1), "48234": datetime.datetime(2019, 10, 1), "48216": datetime.datetime(2019, 10, 1), "48201": datetime.datetime(2019, 11, 1),
+	"48228": datetime.datetime(2019, 11, 1), "48235": datetime.datetime(2019, 12, 1), "48217": datetime.datetime(2019, 12, 1), "48240": datetime.datetime(2020, 1, 1),
+	"48226": datetime.datetime(2020, 1, 1), "48239": datetime.datetime(2020, 1, 1), "48219": datetime.datetime(2018, 12, 1), "48209": datetime.datetime(2019, 1, 1),
+	"48210": datetime.datetime(2019, 2, 1), "48206": datetime.datetime(2019, 3, 1), "48214": datetime.datetime(2019, 3, 1), "48202": datetime.datetime(2019, 4, 1),
+	"48204": datetime.datetime(2019, 4, 1), "48213": datetime.datetime(2019, 5, 1), "48238": datetime.datetime(2019, 5, 1), "48203": datetime.datetime(2019, 6, 1),
+	"48211": datetime.datetime(2019, 6, 1), "48208": datetime.datetime(2019, 7, 1), "48212": datetime.datetime(2019, 7, 1), "48236": datetime.datetime(2019, 8, 1),
+	"48225": datetime.datetime(2019, 8, 1), "48205": datetime.datetime(2019, 8, 1), "48227": datetime.datetime(2019, 8, 1)}
 
 
 def process_rental_reg_status(rental_reg_status):
@@ -53,14 +53,23 @@ def process_number_blight_tickets(number_blight_tickets):
 
 def process_coc_date(zip_code):
 
-	if zip_code in COC_DATES_BY_ZIP.keys():
-		return "All rentals in that zip code need to be registered and inspected with the city by %s" % COC_DATES_BY_ZIP[zip_code]		 
+	#if the compliance date has already passed
+	if zip_code in COC_DATES_BY_ZIP.keys() and COC_DATES_BY_ZIP[zip_code] < datetime.datetime.now():
+		return "All rentals in that zip code should have been registered and inspected with the city by %s" % COC_DATES_BY_ZIP[zip_code].strftime("%d %b, %Y")		 
+	#if the compliance date is in the future
+	elif zip_code in COC_DATES_BY_ZIP.keys():
+		return "All rentals in that zip code should be registered and inspected with the city by %s" % COC_DATES_BY_ZIP[zip_code].strftime("%d %b, %Y")
+	#if the zip is one of the few that isn't actually a Detroit zip code
 	else:
 		return "This zip code does not have a rental compliance date"
 
-def process_taxpayer(taxpayer):
+def process_taxpayer(row):
 
-	return taxpayer.upper()
+	if row['taxpayer'].strip() != "":
+		return row['taxpayer'].upper()
+
+	else:
+		return row['parcel_points_taxpayer'].upper()
 
 def process_owner(owner):
 
@@ -107,21 +116,21 @@ def process_dlba_inventory_status(inventory_status):
 
 def process_vacant_concern_message(row):
 
-	taxpayer = process_taxpayer(row['taxpayer'])
+	taxpayer = process_taxpayer(row)
 	address = process_address(row['address'])
 	demolition_status = process_demolition_status(row['projected_demolish_by_date'], row['demolition_pipeline'])
 	number_blight_tickets = process_number_blight_tickets(row['number_blight_tickets'])
 
 	if number_blight_tickets.isdigit() and int(number_blight_tickets) == 1:
-		return "The city has {taxpayer} listed as the taxpayer for {address}. {demolition_status}. There is {number_blight_tickets} open blight ticket for that address.".format(taxpayer=taxpayer,
+		return "{taxpayer} is listed as the taxpayer for {address}. {demolition_status}. There is {number_blight_tickets} open blight ticket for that address.".format(taxpayer=taxpayer,
 			address=address, demolition_status=demolition_status, number_blight_tickets=number_blight_tickets)
 
-	return "The city has {taxpayer} listed as the taxpayer for {address}. {demolition_status}. There are {number_blight_tickets} open blight tickets for that address.".format(taxpayer=taxpayer,
+	return "{taxpayer} is listed as the taxpayer for {address}. {demolition_status}. There are {number_blight_tickets} open blight tickets for that address.".format(taxpayer=taxpayer,
 		address=address, demolition_status=demolition_status, number_blight_tickets=number_blight_tickets)
 
 def process_rental_message(row):
 
-	taxpayer = process_taxpayer(row['taxpayer'])
+	taxpayer = process_taxpayer(row)
 	address = process_address(row['address'])
 	rental_reg_status = process_rental_reg_status(row['rental_reg_status'])
 	coc_date = process_coc_date(row['zip_code'])
@@ -131,7 +140,7 @@ def process_rental_message(row):
 
 def process_tax_message(row):
 
-	taxpayer = process_taxpayer(row['taxpayer'])
+	taxpayer = process_taxpayer(row)
 	address = process_address(row['address'])
 	tax_auction_status = row['tax_auction_status'].strip()
 	amount_due = row['amount_due'].strip()

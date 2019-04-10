@@ -1,14 +1,16 @@
-DATE = 03122019
+DATE = 04082019
 SPOTCHECK_SAMPLE_SIZE = 20
+TAX_RAW_FILENAME = 20190405-5ca7ec476aab9e78766a64a2.csv
+TAX_PROCESSED_FILENAME = tax_data_04082019.csv
 
 #searches for the most recent Loveland scrape of the Treasurer's data, returns date of scrape
-tax_status_date = $(shell python processors/get-raw-tax-data.py data/raw/$(DATE))
+# tax_status_date = $(shell python processors/get-raw-tax-data.py data/raw/$(DATE))
 
 #helpful to test
-echo:
-	echo $(tax_status_date)
+# echo:
+# 	echo $(tax_status_date)
 
-DIRECTORIES = processed
+DIRECTORIES = processed raw
 DOWNLOADS = parcel_points_ownership blight_violations rental_registrations upcoming_demolitions demolition_pipeline vacant_certifications vacant_registrations dlba_inventory dlba_properties_sale
 TABLES = parcel_points_ownership blight_violations rental_registrations tax_status upcoming_demolitions demolition_pipeline vacant_certifications vacant_registrations dlba_inventory dlba_properties_sale
 LOAD = parcel_points_ownership blight_violations rental_registrations upcoming_demolitions demolition_pipeline vacant_certifications vacant_registrations dlba_inventory dlba_properties_sale
@@ -16,7 +18,7 @@ VIEWS = blight_count data_overview
 
 .PHONY: all create_directories tax_status_date download db create_db schema create_tables clean_tax_data load_tax_data load_data create_views clean drop_db
 
-all: create_directories db create_tables clean_tax_data load_data create_views data/processed/$(DATE)/reach_spotcheck.csv
+all: db create_tables clean_tax_data load_data create_views data/processed/$(DATE)/reach_spotcheck.csv
 
 create_directories: $(patsubst %, directory_%, $(DIRECTORIES))
 download: $(patsubst %, data/raw/$(DATE)/raw-%.csv, $(DOWNLOADS))
@@ -25,7 +27,6 @@ db: create_db schema
 create_tables: $(patsubst %, table_%, $(TABLES))
 load_data: load_tax_data load_portal_data
 load_portal_data: $(patsubst %, data_portal_load_%, $(LOAD)) 
-load_tax_data: tax_load_$(tax_status_date)
 create_views: $(patsubst %, view_%, $(VIEWS))
 clean: drop_db
 
@@ -112,7 +113,7 @@ data/processed/$(DATE)/clean-%.csv: data/raw/$(DATE)/raw-%.csv
 # 	python processors/clean-tax_status.py $< $@ > data/processed/$(DATE)/clean-$(tax_status_date)_tax_status.csv 2> data/processed/$(DATE)/clean-$(tax_status_date)_tax_status_err.txt
 # > data/processed/$(DATE)/clean-$(tax_status_date)_tax_status.csv 2> data/processed/$(DATE)/clean-$(tax_status_date)_tax_status_err.txt
 clean_tax_data:
-	python processors/clean-tax_status.py "data/raw/$(DATE)/$(tax_status_date).csv" "data/processed/$(DATE)/clean-$(tax_status_date)_tax_status.csv"
+	python processors/clean-tax_status.py "data/raw/$(DATE)/$(TAX_RAW_FILENAME)" "data/processed/$(DATE)/$(TAX_PROCESSED_FILENAME)"
 
 ########################################################################
 #Load data into PostgreSQL
@@ -121,8 +122,8 @@ clean_tax_data:
 data_portal_load_%: data/processed/$(DATE)/clean-%.csv
 	$(psql) -c "\copy public.$* from '$(CURDIR)/$<' with (delimiter ',', format csv, header);"
 
-tax_load_%:
-	$(psql) -c "\copy public.tax_status from '$(CURDIR)/data/processed/$(DATE)/clean-$*_tax_status.csv' with (delimiter ',', format csv, header);"
+load_tax_data:
+	$(psql) -c "\copy public.tax_status from '$(CURDIR)/data/processed/$(DATE)/$(TAX_PROCESSED_FILENAME)' with (delimiter ',', format csv, header);"
 
 ########################################################################
 #Join and export data as CSV for internal use

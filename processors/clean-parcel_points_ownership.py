@@ -3,6 +3,7 @@ import sys
 import re
 import requests
 import os
+import pandas as pd
 
 
 VALID_ZIPCODES = [
@@ -10,14 +11,16 @@ VALID_ZIPCODES = [
 	"48240", "48226", "48239", "48219", "48209", "48210", "48206", "48214", "48202", "48204", "48213",
 	"48238", "48203", "48211", "48208", "48212", "48236", "48225", "48205", "48227"]
 
-NEW_CSV_HEADERS = ["ADDRESS", "ZIP-CODE", "TAXPAYER", "OWNER", "ZIP-MODIFIED", "CLEAN-ZIP-CODE"]
+NEW_CSV_HEADERS = ["ADDRESS", "ZIP-CODE", "PARCEL_POINTS_TAXPAYER", "PARCEL_POINTS_OWNER", "ZIP-MODIFIED", "CLEAN-ZIP-CODE"]
 
 OLD_CSV_HEADERS = ["Address", "Zip Code", "Taxpayer", "Owner"]
 
 GOOGLE_MAPS_API_URL = 'https://maps.googleapis.com/maps/api/geocode/json'
 
+GEOCODIO_ZIPS = 'data/static/geocodio-zip-codes.csv'
 
-def get_zip(address):
+
+def get_zip_from_google(address):
 	#'Okay, Google. What is the zip code for this address?'
 	params = {
 		'address' :  (address + " Detroit, MI"),
@@ -43,6 +46,18 @@ def get_zip(address):
 
 	return "ERROR NO ZIP FOUND FOR ADDRESS"
 
+#getting zip from CSV that came from geocodio processing Parcel Points Ownership, mid-March 2019
+def get_zip_from_data(address):
+
+	df = pd.read_csv(GEOCODIO_ZIPS, dtype=str)
+
+	row = df[df['address']==address.upper()]
+
+	item = row.iat[0,2]
+
+	return item
+
+
 def main(raw_filename, clean_filename):
 	#create a reader for the raw housing csv
 	with open(raw_filename) as fr:
@@ -59,8 +74,6 @@ def main(raw_filename, clean_filename):
 
 			#go through and check each row
 			for row in reader:
-
-				# print("Processing row number %s" % str(counter))
 
 				row_empty = True
 
@@ -81,15 +94,20 @@ def main(raw_filename, clean_filename):
 					new_row.append(row[header].strip().lower())
 
 				#if the zip code is not one of the valid zip codes listed, we need to modify it and flag it as modified
-				if row["Zip Code"] not in VALID_ZIPCODES:
+				if row["Zip Code"] not in VALID_ZIPCODES and row['Address'].strip() != "":
 					#indicate that the zip code was modified
 					new_row.append("true")
 
 					# print("Zip code %s not valid" % row["Zip Code"])
 
-					new_zip = get_zip(row['Address'])
+					new_zip = get_zip_from_data(row['Address'])
 
 					new_row.append(new_zip)
+
+				elif row['Address'].strip() == "":
+
+					new_row.append("N/A")
+					new_row.append("N/A")
 
 				else:
 					#indicate that zip code was not modified

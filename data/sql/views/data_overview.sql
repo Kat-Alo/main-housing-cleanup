@@ -4,7 +4,7 @@ CREATE OR REPLACE VIEW public.data_overview
 		blight_count.NUMBER_BLIGHT_TICKETS,
 		parcel_points_ownership.ZIP_MODIFIED, parcel_points_ownership.CLEAN_ZIP_CODE AS ZIP_CODE, 
 		tax_status.TAX_AUCTION_STATUS, tax_status.AMOUNT_DUE,
-		parcel_points_ownership.TAXPAYER, parcel_points_ownership.OWNER,
+		tax_status.TAXPAYER, parcel_points_ownership.PARCEL_POINTS_TAXPAYER,
 		upcoming_demolitions.DEMOLITION_CONTRACTOR, upcoming_demolitions.PROJECTED_DEMOLISH_BY_DATE,
 		demolition_pipeline.DEMOLITION_PIPELINE, vacant_certifications.VACANT_CERTIFIED_FIRST_NAME,
 		vacant_certifications.VACANT_CERTIFIED_LAST_NAME, vacant_registrations.VACANT_REGISTERED_FIRST_NAME,

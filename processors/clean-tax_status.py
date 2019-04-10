@@ -2,8 +2,8 @@ import csv
 import sys
 
 
-NEW_CSV_HEADERS = ["ADDRESS", "TAX-AUCTION-STATUS", "AMOUNT-DUE"]
-OLD_CSV_HEADERS = ["address", "status", "due"]
+NEW_CSV_HEADERS = ["ADDRESS", "TAXPAYER", "TAX-AUCTION-STATUS", "AMOUNT-DUE"]
+OLD_CSV_HEADERS = ["address", "taxpayer", "status", "due"]
 
 
 

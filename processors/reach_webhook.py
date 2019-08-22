@@ -3,9 +3,9 @@ import sys
 import datetime
 
 # NEW_CSV_HEADERS = ["address", "rental_reg_status", "number_blight_tickets", "coc_date", "tax_auction_status",
-# 	"amount_due", "taxpayer", "owner", "demolition_status", "vacant_status", "dlba_inventory_status"]
+# 	"amount_due", "taxpayer", "owner", "demolition_status", "vacant_status", "dlba_inventory_message"]
 
-NEW_CSV_HEADERS = ["address", "Q1_tax_status", "Q2_rental_reg_status", "Q3_vacant_concern", "Q4_vacant_purchase"]
+NEW_CSV_HEADERS = ["address", "Q1_tax_status", "Q2_rental_reg_status", "Q3_vacant_concern", "Q4_vacant_purchase", "Q5_pre"]
 
 STREET_ABBREVIATIONS = ["st", "blvd", "ct", "dr", "ave", "ctr", "cir", "hwy", "jct", "ln", "pkwy", "rd"]
 

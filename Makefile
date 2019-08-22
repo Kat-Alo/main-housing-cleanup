@@ -1,14 +1,8 @@
-DATE = 04082019
+DATE := $(shell python processors/get_date.py)
+TAX_RAW_FILENAME := $(shell python processors/get_tax_raw_filename.py)
+TAX_PROCESSED_FILENAME := $(shell python processors/get_tax_processed_filename.py $(TAX_RAW_FILENAME))
+
 SPOTCHECK_SAMPLE_SIZE = 20
-TAX_RAW_FILENAME = 20190405-5ca7ec476aab9e78766a64a2.csv
-TAX_PROCESSED_FILENAME = tax_data_04082019.csv
-
-#searches for the most recent Loveland scrape of the Treasurer's data, returns date of scrape
-# tax_status_date = $(shell python processors/get-raw-tax-data.py data/raw/$(DATE))
-
-#helpful to test
-# echo:
-# 	echo $(tax_status_date)
 
 DIRECTORIES = processed raw
 DOWNLOADS = parcel_points_ownership blight_violations rental_registrations upcoming_demolitions demolition_pipeline vacant_certifications vacant_registrations dlba_inventory dlba_properties_sale
@@ -29,7 +23,6 @@ load_data: load_tax_data load_portal_data
 load_portal_data: $(patsubst %, data_portal_load_%, $(LOAD)) 
 create_views: $(patsubst %, view_%, $(VIEWS))
 clean: drop_db
-
 
 ########################################################################
 #PSQL Database check functions
@@ -52,7 +45,7 @@ endef
 ########################################################################
 
 create_db :
-	$(check_database) || psql $(DETROIT_PROPERTIES_DB_ROOT_URL) -c "create database $(DETROIT_PROPERITES_DB_NAME) lc_collate \"C\" lc_ctype \"C\" template template0;"
+	$(check_database) || psql $(DETROIT_PROPERTIES_DB_ROOT_URL) -c "create database $(DETROIT_PROPERTIES_DB_NAME) lc_collate \"C\" lc_ctype \"C\" template template0;"
 
 schema :
 	$(psql) -c "CREATE SCHEMA IF NOT EXISTS tmp;"
@@ -61,7 +54,7 @@ table_% : data/sql/tables/%.sql
 	$(check_public_relation_%) || $(psql) -f $<
 
 drop_db :
-	psql $(DETROIT_PROPERTIES_ROOT_URL) -c "drop database $(DETROIT_PROPERITES_DB_NAME);"
+	psql $(DETROIT_PROPERTIES_ROOT_URL) -c "drop database $(DETROIT_PROPERTIES_DB_NAME);"
 
 ########################################################################
 #Create new directories for today's data download
@@ -108,10 +101,6 @@ data/raw/$(DATE)/raw-dlba_properties_sale.csv:
 data/processed/$(DATE)/clean-%.csv: data/raw/$(DATE)/raw-%.csv
 	python processors/clean-$*.py $< $@ > data/processed/$(DATE)/clean-$*.csv 2> data/processed/$(DATE)/clean-$*_err.txt
 
-# .PRECIOUS: data/processed/$(DATE)/clean-%_tax_status.csv
-# data/processed/$(DATE)/clean-%_tax_status.csv: data/raw/$(DATE)/$(tax_status_date).csv
-# 	python processors/clean-tax_status.py $< $@ > data/processed/$(DATE)/clean-$(tax_status_date)_tax_status.csv 2> data/processed/$(DATE)/clean-$(tax_status_date)_tax_status_err.txt
-# > data/processed/$(DATE)/clean-$(tax_status_date)_tax_status.csv 2> data/processed/$(DATE)/clean-$(tax_status_date)_tax_status_err.txt
 clean_tax_data:
 	python processors/clean-tax_status.py "data/raw/$(DATE)/$(TAX_RAW_FILENAME)" "data/processed/$(DATE)/$(TAX_PROCESSED_FILENAME)"
 
@@ -134,13 +123,6 @@ view_%: data/sql/views/%.sql
 
 data/processed/$(DATE)/data_overview.csv:
 	$(psql) -c "\copy (SELECT * FROM data_overview) TO '$(CURDIR)/$@' with (delimiter ',', format csv, header);"
-
-########################################################################
-#Process overview CSV with text for GroundSource
-########################################################################
-
-data/processed/$(DATE)/groundsource_webhook.csv: data/processed/$(DATE)/data_overview.csv
-	python processors/groundsource_webhook.py $< $@ > data/processed/$(DATE)/groundsource_webhook.csv 2> data/processed/$(DATE)/groundsource_webhook_err.txt
 
 ########################################################################
 #Process overview CSV with text for Reach

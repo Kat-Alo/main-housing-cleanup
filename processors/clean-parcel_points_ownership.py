@@ -111,12 +111,7 @@ def main(raw_filename, clean_filename):
 			#go through and check each row
 			for row in reader:
 
-				row_empty = True
-
-				for key in row.keys():
-					if row[key].strip() != "":
-						row_empty = False
-						break
+				row_empty = is_row_empty(row)
 
 				#if the row has nothing, we are done. Please walk, don't run, to the exit.
 				if row_empty:
@@ -129,31 +124,10 @@ def main(raw_filename, clean_filename):
 				for header in OLD_CSV_HEADERS:
 					new_row.append(row[header].strip().lower())
 
-				#if the zip code is not one of the valid zip codes listed, we need to modify it and flag it as modified
-				if row["Zip Code"] not in VALID_ZIPCODES and row['Address'].strip() != "":
-					#indicate that the zip code was modified
-					new_row.append("true")
-
-					# print("Zip code %s not valid" % row["Zip Code"])
-
-					new_zip = get_zip_from_data(row['Address'])
-
-					new_row.append(new_zip)
-
-				elif row['Address'].strip() == "":
-
-					new_row.append("N/A")
-					new_row.append("N/A")
-
-				else:
-					#indicate that zip code was not modified
-					new_row.append("false")
-
-					#make new zip code same as original one
-					new_row.append(row["Zip Code"])
+				new_row = add_zip_values(row, new_row)
+				new_row = add_pre_values(new_row, corrected_pre_data)
 
 				writer.writerow(new_row)
-				# print("Row written for address: %s" % new_row[0])
 
 				counter += 1
 

@@ -1,4 +1,5 @@
-DATE := $(shell python processors/get_date.py)
+# DATE := $(shell python processors/get_date.py)
+DATE = $(shell date +'%m%d%Y')
 TAX_RAW_FILENAME := $(shell python processors/get_tax_raw_filename.py)
 TAX_PROCESSED_FILENAME := $(shell python processors/get_tax_processed_filename.py $(TAX_RAW_FILENAME))
 
@@ -67,31 +68,31 @@ directory_%:
 #Download data
 ########################################################################
 data/raw/$(DATE)/raw-parcel_points_ownership.csv:
-	curl "https://data.detroitmi.gov/api/views/dxgi-9s8s/rows.csv?accessType=DOWNLOAD" > $@
+	curl -o $@ "https://data.detroitmi.gov/api/views/dxgi-9s8s/rows.csv?accessType=DOWNLOAD"
 
 data/raw/$(DATE)/raw-rental_registrations.csv:
-	curl "https://data.detroitmi.gov/api/views/64cb-n6dd/rows.csv?accessType=DOWNLOAD" > $@
+	curl -o $@ "https://data.detroitmi.gov/api/views/64cb-n6dd/rows.csv?accessType=DOWNLOAD"
 
 data/raw/$(DATE)/raw-blight_violations.csv:
-	curl "https://data.detroitmi.gov/api/views/ti6p-wcg4/rows.csv?accessType=DOWNLOAD" > $@
+	curl -o $@ "https://data.detroitmi.gov/api/views/ti6p-wcg4/rows.csv?accessType=DOWNLOAD"
 
 data/raw/$(DATE)/raw-upcoming_demolitions.csv:
-	curl "https://data.detroitmi.gov/api/views/tsqq-qtet/rows.csv?accessType=DOWNLOAD" > $@
+	curl -o $@ "https://data.detroitmi.gov/api/views/tsqq-qtet/rows.csv?accessType=DOWNLOAD"
 
 data/raw/$(DATE)/raw-demolition_pipeline.csv:
-	curl "https://data.detroitmi.gov/api/views/urqn-dpd3/rows.csv?accessType=DOWNLOAD&bom=true&query=select+*" > $@
+	curl -o $@ "https://data.detroitmi.gov/api/views/urqn-dpd3/rows.csv?accessType=DOWNLOAD&bom=true&query=select+*"
 
 data/raw/$(DATE)/raw-vacant_certifications.csv:
-	curl "https://data.detroitmi.gov/api/views/8vfc-77i7/rows.csv?accessType=DOWNLOAD" > $@
+	curl -o $@ "https://data.detroitmi.gov/api/views/8vfc-77i7/rows.csv?accessType=DOWNLOAD"
 
 data/raw/$(DATE)/raw-vacant_registrations.csv:
-	curl "https://data.detroitmi.gov/api/views/futm-xtvg/rows.csv?accessType=DOWNLOAD" > $@
+	curl -o $@ "https://data.detroitmi.gov/api/views/futm-xtvg/rows.csv?accessType=DOWNLOAD"
 
 data/raw/$(DATE)/raw-dlba_inventory.csv:
-	curl "https://data.detroitmi.gov/api/views/vsin-ur7i/rows.csv?accessType=DOWNLOAD" > $@
+	curl -o $@ "https://data.detroitmi.gov/api/views/vsin-ur7i/rows.csv?accessType=DOWNLOAD"
 
 data/raw/$(DATE)/raw-dlba_properties_sale.csv:
-	curl "https://data.detroitmi.gov/api/views/gfhb-f4i5/rows.csv?accessType=DOWNLOAD" > $@
+	curl -o $@ "https://data.detroitmi.gov/api/views/gfhb-f4i5/rows.csv?accessType=DOWNLOAD"
 
 ########################################################################
 #Clean data

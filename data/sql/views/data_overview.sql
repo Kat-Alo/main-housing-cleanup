@@ -2,7 +2,8 @@ CREATE OR REPLACE VIEW public.data_overview
 	AS
 		SELECT all_addresses.ADDRESS, rental_registrations.RENTAL_REG_STATUS,
 		blight_count.NUMBER_BLIGHT_TICKETS,
-		parcel_points_ownership.ZIP_MODIFIED, parcel_points_ownership.CLEAN_ZIP_CODE AS ZIP_CODE, 
+		parcel_points_ownership.ZIP_MODIFIED, parcel_points_ownership.CLEAN_ZIP_CODE AS ZIP_CODE,
+		parcel_points_ownership.CORRECTED_PRE, parcel_points_ownership.PRE_SAME, 
 		tax_status.TAX_AUCTION_STATUS, tax_status.AMOUNT_DUE,
 		tax_status.TAXPAYER, parcel_points_ownership.PARCEL_POINTS_TAXPAYER,
 		upcoming_demolitions.DEMOLITION_CONTRACTOR, upcoming_demolitions.PROJECTED_DEMOLISH_BY_DATE,

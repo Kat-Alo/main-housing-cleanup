@@ -181,14 +181,27 @@ def row_is_complete(row):
 
 	return False
 
-def main(overview_filename, groundsource_filename):
+def process_pre_message(row):
+
+	address = process_address(row['address'])
+
+	if row['corrected_pre'] == "0":
+		return "The taxpayer for {address} is not receiving a Principal Residence Exemption, according to the city.".format(address=address)
+
+	elif row['corrected_pre'] == "ADDRESS NOT FOUND":
+		return "{address} is not in the city's Principal Residence Exemption data.".format(address=address)
+
+	else:
+		return "The taxpayer for {address} is receiving a {PRE}% Principal Residence Exemption, according to the city.".format(address=address, PRE=row['corrected_pre'])
+
+def main(overview_filename, reach_filename):
 
 	#create a reader for the raw overview file
 	with open(overview_filename) as fr:
 		reader = csv.DictReader(fr)
 
-		#create a writer for the final groundsource csv
-		with open(groundsource_filename, 'w') as fw:
+		#create a writer for the final reach csv
+		with open(reach_filename, 'w') as fw:
 			writer = csv.writer(fw)
 
 			#Write the new headers into the new CSV
@@ -203,7 +216,8 @@ def main(overview_filename, groundsource_filename):
 					new_row.append(process_tax_message(row))
 					new_row.append(process_rental_message(row))
 					new_row.append(process_vacant_concern_message(row))
-					new_row.append(process_dlba_inventory_status(row['inventory_status']))
+					new_row.append(process_dlba_inventory_message(row))
+					new_row.append(process_pre_message(row))
 
 					writer.writerow(new_row)
 

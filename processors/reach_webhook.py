@@ -103,14 +103,17 @@ def process_vacant_status(certified, registered):
 
 	return vacant_status
 
-def process_dlba_inventory_status(inventory_status):
+def process_dlba_inventory_message(row):
+
+	inventory_status = row['inventory_status']
+	address = process_address(row['address'])
 
 	if inventory_status.strip() == "dlba owned sidelot for sale" or inventory_status.strip() == "dlba owned structure for sale":
-		new_inventory_status = "This property is owned by the Land Bank and is for sale"
+		new_inventory_status = "{address} is owned by the Land Bank and is for sale".format(address=address)
 	elif inventory_status.strip() == "dlba owned structure" or inventory_status.strip() == "dlba owned vacant land":
-		new_inventory_status = "This property is owned by the Land Bank and is not for sale"
+		new_inventory_status = "{address} is owned by the Land Bank and is not for sale".format(address=address)
 	else:
-		new_inventory_status = "This property is not owned by the Land Bank"
+		new_inventory_status = "{address} is not owned by the Land Bank".format(address=address)
 
 	return new_inventory_status
 

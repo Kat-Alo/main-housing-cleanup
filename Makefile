@@ -1,7 +1,7 @@
 # DATE := $(shell python processors/get_date.py)
 DATE = $(shell date +'%m%d%Y')
-TAX_RAW_FILENAME := $(shell python processors/get_tax_raw_filename.py)
-TAX_PROCESSED_FILENAME := $(shell python processors/get_tax_processed_filename.py $(TAX_RAW_FILENAME))
+TAX_RAW_FILENAME = $(shell python processors/get_tax_raw_filename.py)
+TAX_PROCESSED_FILENAME = $(shell python processors/get_tax_processed_filename.py $(TAX_RAW_FILENAME))
 
 SPOTCHECK_SAMPLE_SIZE = 20
 

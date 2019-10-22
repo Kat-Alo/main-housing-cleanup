@@ -69,7 +69,7 @@ def process_taxpayer(row):
 		return row['taxpayer'].upper()
 
 	else:
-		return row['parcel_points_taxpayer'].upper()
+		return row['parcels_taxpayer'].upper()
 
 def process_owner(owner):
 
@@ -135,7 +135,7 @@ def process_rental_message(row):
 
 	taxpayer = process_taxpayer(row)
 	address = process_address(row['address'])
-	rental_reg_status = process_rental_reg_status(row['rental_reg_status'])
+	rental_reg_status = process_rental_reg_status(row['rental_reg_status_historic'])
 	coc_date = process_coc_date(row['zip_code'])
 
 	return "{taxpayer} is listed as the taxpayer for {address}. {rental_reg_status}. {coc_date}.".format(taxpayer=taxpayer, address=address, rental_reg_status=rental_reg_status,

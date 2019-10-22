@@ -3,7 +3,7 @@ import sys
 
 
 NEW_CSV_HEADERS = ["ADDRESS", "DEMOLITION-PIPELINE"]
-OLD_CSV_HEADERS = ["\ufeffAddress"]
+OLD_CSV_HEADERS = ["address"]
 
 
 def main(raw_filename, clean_filename):

@@ -3,7 +3,7 @@ import sys
 
 
 NEW_CSV_HEADERS = ["ADDRESS", "DLBA-SALE-PROGRAM"]
-OLD_CSV_HEADERS = ["Address", "Program"]
+OLD_CSV_HEADERS = ["address", "program"]
 
 
 def main(raw_filename, clean_filename):

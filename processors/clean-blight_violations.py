@@ -3,8 +3,6 @@ import sys
 import datetime
 
 
-
-
 NEW_CSV_HEADERS = ["ADDRESS", "HEARING DATE", "AMOUNT_DUE", "VIOLATION_DESCRIPTION"]
 
 
@@ -12,7 +10,7 @@ def is_after_today(hearing_date):
 	today = datetime.datetime.now()
 
 	if hearing_date != "":
-		hearing_datetime = datetime.datetime.strptime(hearing_date, '%m/%d/%Y')
+		hearing_datetime = datetime.datetime.strptime(hearing_date, '%Y-%m-%d')
 
 		if isinstance(hearing_datetime, datetime.datetime) and hearing_datetime >= today:
 
@@ -45,54 +43,18 @@ def main(raw_filename, clean_filename):
 			for row in reader:
 				new_row = []
 
-				if is_after_today(row["Hearing Date"].strip()) or is_current_balance(row["Balance Due"].strip()):
-					new_row.append(row["Violation Address"].strip().lower())
-					new_row.append(row["Hearing Date"])
-					new_row.append(row["Balance Due"])
-					new_row.append(row["Violation Description"])
+				if is_after_today(row["hearing_date"].strip()[0:10]) or is_current_balance(row["balance_due"].strip()):
+					new_row.append(row["violation_address"].strip().lower())
+					new_row.append(row["hearing_date"].strip()[0:10])
+					new_row.append(row["balance_due"])
+					new_row.append(row["violation_description"])
 					writer.writerow(new_row)
 
-
-			
 
 
 if __name__ == '__main__':
 
 	main(sys.argv[1], sys.argv[2])
-
-
-
-# new_csv_list = []
-
-			# for row in reader:
-
-			# 	new_row = []
-			# 	address_already_entered = False
-
-			# 	if row["Balance Due"].strip() != "$0.00" or is_after_today(row["Hearing Date"]):
-
-			# 		address = row["Violation Street Number"] + " " + row["Violation Street Name"]
-
-			# 		if len(new_csv_list) > 0:
-			# 			for item in new_csv_list:
-			# 				if item[0].strip() == address.strip():
-			# 					item[1] += 1
-			# 					address_already_entered = True
-			# 					break
-
-			# 		if address_already_entered == False:
-			# 			new_row.append(address)
-			# 			new_row.append(1)
-			# 			new_csv_list.append(new_row)
-
-			# for item in new_csv_list:	
-			# 	writer.writerow(item)
-
-
-
-
-
-
 
 
 

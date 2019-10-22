@@ -5,16 +5,19 @@ TAX_PROCESSED_FILENAME = $(shell python processors/get_tax_processed_filename.py
 SPOTCHECK_SAMPLE_SIZE = 20
 
 DIRECTORIES = processed raw
-DOWNLOADS = parcel_points_ownership blight_violations rental_registrations upcoming_demolitions demolition_pipeline vacant_certifications vacant_registrations dlba_inventory dlba_properties_sale
-TABLES = parcel_points_ownership blight_violations rental_registrations tax_status upcoming_demolitions demolition_pipeline vacant_certifications vacant_registrations dlba_inventory dlba_properties_sale
-LOAD = parcel_points_ownership blight_violations rental_registrations upcoming_demolitions demolition_pipeline vacant_certifications vacant_registrations dlba_inventory dlba_properties_sale
+DOWNLOADS = parcels blight_violations rental_registrations_historic demolitions_under_contract demolition_pipeline vacant_certifications dlba_inventory dlba_properties_sale
+TABLES = parcels blight_violations rental_registrations_historic tax_status demolitions_under_contract demolition_pipeline vacant_certifications dlba_inventory dlba_properties_sale
+LOAD = parcels blight_violations rental_registrations_historic demolitions_under_contract demolition_pipeline vacant_certifications dlba_inventory dlba_properties_sale
 VIEWS = blight_count data_overview
 
-.PHONY: all create_directories tax_status_date download db create_db schema create_tables clean_tax_data load_tax_data load_data create_views clean drop_db
+#Datasets that are unavailable on Detroit's open data portal as of 10/21/2019:
+	#vacant_registrations
+
+.PHONY: all directories tax_status_date download db create_db schema create_tables clean_tax_data load_tax_data load_data create_views clean drop_db
 
 all: db create_tables clean_tax_data load_data create_views data/processed/$(DATE)/reach_spotcheck.csv
 
-create_directories: $(patsubst %, directory_%, $(DIRECTORIES))
+directories: $(patsubst %, directory_%, $(DIRECTORIES))
 download: $(patsubst %, data/raw/$(DATE)/raw-%.csv, $(DOWNLOADS))
 process_data: $(patsubst %, data/processed/$(DATE)/clean-%.csv, $(TABLES))
 db: create_db schema
@@ -66,32 +69,41 @@ directory_%:
 ########################################################################
 #Download data
 ########################################################################
-data/raw/$(DATE)/raw-parcel_points_ownership.csv:
-	curl -o $@ "https://data.detroitmi.gov/api/views/dxgi-9s8s/rows.csv?accessType=DOWNLOAD"
+data/raw/$(DATE)/raw-parcels.csv:
+	curl -o $@ "https://opendata.arcgis.com/datasets/a79a16f9fa5d4c0c84957cb96d7250ce_0.csv"
 
-data/raw/$(DATE)/raw-rental_registrations.csv:
-	curl -o $@ "https://data.detroitmi.gov/api/views/64cb-n6dd/rows.csv?accessType=DOWNLOAD"
+data/raw/$(DATE)/raw-rental_registrations_historic.csv:
+	curl -o $@ "https://opendata.arcgis.com/datasets/d563b1e6fa1e4740bd5bc78ff75a94ea_0.csv"
+
+data/raw/$(DATE)/raw-rental_registrations_current.csv:
+	curl -o $@ "https://opendata.arcgis.com/datasets/4bf945db092b4adaa0949fda2fc6a0af_0.csv"
+
+data/raw/$(DATE)/raw-rental_certifications_historic.csv:
+	curl -o $@ "https://opendata.arcgis.com/datasets/f387316a090e45b397a173baef5eb131_0.csv"
+
+data/raw/$(DATE)/raw-rental_inspections_historic.csv:
+	curl -o $@ "https://opendata.arcgis.com/datasets/97664edd5ead444282e348e566de4eea_0.csv"
 
 data/raw/$(DATE)/raw-blight_violations.csv:
-	curl -o $@ "https://data.detroitmi.gov/api/views/ti6p-wcg4/rows.csv?accessType=DOWNLOAD"
+	curl -o $@ "https://opendata.arcgis.com/datasets/5854b96be15b44f2a7ee85f2702790e7_0.csv"
 
-data/raw/$(DATE)/raw-upcoming_demolitions.csv:
-	curl -o $@ "https://data.detroitmi.gov/api/views/tsqq-qtet/rows.csv?accessType=DOWNLOAD"
+data/raw/$(DATE)/raw-demolitions_under_contract.csv:
+	curl -o $@ "https://opendata.arcgis.com/datasets/e506c103f3a045a1aa53f7cd8e70dc1d_0.csv"
 
 data/raw/$(DATE)/raw-demolition_pipeline.csv:
-	curl -o $@ "https://data.detroitmi.gov/api/views/urqn-dpd3/rows.csv?accessType=DOWNLOAD&bom=true&query=select+*"
+	curl -o $@ "https://opendata.arcgis.com/datasets/0d81898958304265ac45d2f59a7339f5_0.csv"
 
 data/raw/$(DATE)/raw-vacant_certifications.csv:
-	curl -o $@ "https://data.detroitmi.gov/api/views/8vfc-77i7/rows.csv?accessType=DOWNLOAD"
+	curl -o $@ "https://opendata.arcgis.com/datasets/755864d640094e2a985f5b0d45e9bc24_0.csv"
 
 data/raw/$(DATE)/raw-vacant_registrations.csv:
-	curl -o $@ "https://data.detroitmi.gov/api/views/futm-xtvg/rows.csv?accessType=DOWNLOAD"
+	curl -o $@ "https://opendata.arcgis.com/datasets/8d0c2d45644442ac990bffc2cb3a55b9_0.csv"
 
 data/raw/$(DATE)/raw-dlba_inventory.csv:
-	curl -o $@ "https://data.detroitmi.gov/api/views/vsin-ur7i/rows.csv?accessType=DOWNLOAD"
+	curl -o $@ "https://opendata.arcgis.com/datasets/04ba7b817d1d45ba89aab539af7ec438_0.csv"
 
 data/raw/$(DATE)/raw-dlba_properties_sale.csv:
-	curl -o $@ "https://data.detroitmi.gov/api/views/gfhb-f4i5/rows.csv?accessType=DOWNLOAD"
+	curl -o $@ "https://opendata.arcgis.com/datasets/dfb563f061b74f60b799c5eeae617fc8_0.csv"
 
 ########################################################################
 #Clean data

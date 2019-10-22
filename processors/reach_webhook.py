@@ -9,14 +9,14 @@ NEW_CSV_HEADERS = ["address", "Q1_tax_status", "Q2_rental_reg_status", "Q3_vacan
 
 STREET_ABBREVIATIONS = ["st", "blvd", "ct", "dr", "ave", "ctr", "cir", "hwy", "jct", "ln", "pkwy", "rd"]
 
-COC_DATES_BY_ZIP = {"48215": datetime.datetime(2018, 8, 1), "48224": datetime.datetime(2018, 9, 1), "48223": datetime.datetime(2018, 11, 1), "48207": datetime.datetime(2019, 9, 1), 
-	"48221": datetime.datetime(2019, 9, 1), "48234": datetime.datetime(2019, 10, 1), "48216": datetime.datetime(2019, 10, 1), "48201": datetime.datetime(2019, 11, 1),
-	"48228": datetime.datetime(2019, 11, 1), "48235": datetime.datetime(2019, 12, 1), "48217": datetime.datetime(2019, 12, 1), "48240": datetime.datetime(2020, 1, 1),
-	"48226": datetime.datetime(2020, 1, 1), "48239": datetime.datetime(2020, 1, 1), "48219": datetime.datetime(2018, 12, 1), "48209": datetime.datetime(2019, 1, 1),
-	"48210": datetime.datetime(2019, 2, 1), "48206": datetime.datetime(2019, 3, 1), "48214": datetime.datetime(2019, 3, 1), "48202": datetime.datetime(2019, 4, 1),
-	"48204": datetime.datetime(2019, 4, 1), "48213": datetime.datetime(2019, 5, 1), "48238": datetime.datetime(2019, 5, 1), "48203": datetime.datetime(2019, 6, 1),
-	"48211": datetime.datetime(2019, 6, 1), "48208": datetime.datetime(2019, 7, 1), "48212": datetime.datetime(2019, 7, 1), "48236": datetime.datetime(2019, 8, 1),
-	"48225": datetime.datetime(2019, 8, 1), "48205": datetime.datetime(2019, 8, 1), "48227": datetime.datetime(2019, 8, 1)}
+COC_DATES_BY_ZIP = {"48215": datetime.datetime(2018, 8, 1), "48224": datetime.datetime(2018, 9, 1), "48223": datetime.datetime(2019, 1, 2), "48207": datetime.datetime(2020, 9, 1), 
+	"48221": datetime.datetime(2020, 9, 1), "48234": datetime.datetime(2020, 10, 1), "48216": datetime.datetime(2020, 10, 1), "48201": datetime.datetime(2021, 1, 2),
+	"48228": datetime.datetime(2021, 1, 2), "48235": datetime.datetime(2021, 2, 1), "48217": datetime.datetime(2021, 2, 1), "48240": datetime.datetime(2021, 5, 1),
+	"48226": datetime.datetime(2021, 5, 1), "48239": datetime.datetime(2021, 5, 1), "48219": datetime.datetime(2019, 2, 1), "48209": datetime.datetime(2019, 5, 1),
+	"48210": datetime.datetime(2019, 6, 3), "48206": datetime.datetime(2019, 9, 3), "48214": datetime.datetime(2019, 9, 3), "48202": datetime.datetime(2019, 10, 1),
+	"48204": datetime.datetime(2019, 10, 1), "48213": datetime.datetime(2020, 1, 2), "48238": datetime.datetime(2019, 1, 2), "48203": datetime.datetime(2020, 2, 1),
+	"48211": datetime.datetime(2020, 2, 1), "48208": datetime.datetime(2020, 5, 1), "48212": datetime.datetime(2020, 5, 1), "48236": datetime.datetime(2020, 6, 1),
+	"48225": datetime.datetime(2020, 6, 1), "48205": datetime.datetime(2020, 6, 1), "48227": datetime.datetime(2020, 6, 1)}
 
 
 def process_rental_reg_status(rental_reg_status):
